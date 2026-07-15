@@ -166,6 +166,20 @@ class Store:
                 ).fetchone()[0]
             )
 
+    def has_ready_question(self, session_id: int) -> bool:
+        with self.connect() as db:
+            return (
+                db.execute(
+                    """
+                    SELECT 1 FROM questions
+                    WHERE session_id=? AND status='ready'
+                    LIMIT 1
+                    """,
+                    (session_id,),
+                ).fetchone()
+                is not None
+            )
+
     def recent_question_texts(self, session_id: int, limit: int = 5) -> list[str]:
         with self.connect() as db:
             rows = db.execute(

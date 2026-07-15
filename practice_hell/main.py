@@ -175,6 +175,17 @@ def create_app(
             result["choices"] = [choice.model_dump() for choice in problem.question.choices]
         return result
 
+    @app.get("/api/session/question-status")
+    async def get_question_status(
+        background_tasks: BackgroundTasks,
+        session: sqlite3.Row = Depends(require_session),
+    ) -> dict:
+        problem = problem_for_session(session)
+        ready = store.has_ready_question(int(session["id"]))
+        if not ready:
+            background_tasks.add_task(ensure_buffer, int(session["id"]), problem, 1)
+        return {"ready": ready}
+
     @app.post("/api/session/answer")
     async def submit_answer(
         payload: AnswerSubmit,
@@ -229,6 +240,7 @@ def create_app(
             "correct_answer": str(question["correct_answer"]),
             "correct_answer_label": correct_answer_label,
             "progress": progress_dict(progress),
+            "next_question_ready": store.has_ready_question(int(session["id"])),
         }
 
     dist = ROOT / "dist"

@@ -75,6 +75,35 @@ function Practice({ exercise }: { exercise: Exercise }) {
 
   useEffect(() => { void loadQuestion(); }, []);
 
+  useEffect(() => {
+    if (!feedback || feedback.next_question_ready) return;
+
+    let cancelled = false;
+    let timer: number | undefined;
+    async function checkNextQuestion() {
+      try {
+        const status = await api<{ ready: boolean }>("/api/session/question-status", {
+          headers: sessionHeaders(),
+        });
+        if (cancelled) return;
+        if (status.ready) {
+          setFeedback((current) => current ? { ...current, next_question_ready: true } : current);
+        } else {
+          timer = window.setTimeout(() => void checkNextQuestion(), 1000);
+        }
+      } catch (cause) {
+        if (cancelled) return;
+        setError((cause as Error).message);
+        timer = window.setTimeout(() => void checkNextQuestion(), 1000);
+      }
+    }
+    void checkNextQuestion();
+    return () => {
+      cancelled = true;
+      if (timer !== undefined) window.clearTimeout(timer);
+    };
+  }, [feedback?.next_question_ready]);
+
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (!question) return;
@@ -129,7 +158,12 @@ function Practice({ exercise }: { exercise: Exercise }) {
             <div><dt>目標</dt><dd>直近{feedback.progress.window_size}問で{feedback.progress.required_accuracy_percent}%以上</dd></div>
           </dl>
           {feedback.progress.achieved && <p className="achieved">目標を達成しました。続けて演習できます。</p>}
-          <button onClick={() => void loadQuestion()}>次の問題</button>
+          <button
+            onClick={() => void loadQuestion()}
+            disabled={!feedback.next_question_ready}
+          >
+            {feedback.next_question_ready ? "次の問題" : "次の問題を生成中"}
+          </button>
         </div>
       )}
     </section>

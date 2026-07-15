@@ -3,7 +3,7 @@ from pathlib import Path
 import httpx
 import pytest
 
-from practice_hell.generator import FixedQuestionGenerator
+from practice_hell.generator import FixedQuestionGenerator, GeneratedQuestion
 from practice_hell.main import create_app
 
 
@@ -107,3 +107,53 @@ async def test_blank_attendance_values_are_rejected(client: httpx.AsyncClient) -
         },
     )
     assert response.status_code == 422
+
+
+class DelayedQuestionGenerator:
+    def __init__(self) -> None:
+        self.calls = 0
+        self.available = False
+
+    async def generate(self, problem, recent_question_texts, position):
+        self.calls += 1
+        if self.calls > 1 and not self.available:
+            raise RuntimeError("次問を生成中")
+        return GeneratedQuestion(
+            question_text=f"確認問題 {position}: \\(2 + 2\\) を計算してください。",
+            correct_answer="4",
+        )
+
+
+async def test_next_question_status_waits_until_generation_finishes(
+    tmp_path: Path,
+) -> None:
+    generator = DelayedQuestionGenerator()
+    app = create_app(
+        database_path=tmp_path / "delayed.db",
+        problems_directory=Path("problems"),
+        generator=generator,
+    )
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app), base_url="http://test"
+    ) as delayed_client:
+        headers = await join(delayed_client, "test-simple-addition")
+        question = (
+            await delayed_client.get("/api/session/question", headers=headers)
+        ).json()
+        result = await delayed_client.post(
+            "/api/session/answer",
+            headers=headers,
+            json={"question_id": question["id"], "answer": "4"},
+        )
+        assert result.status_code == 200
+        assert result.json()["next_question_ready"] is False
+
+        generator.available = True
+        generating = await delayed_client.get(
+            "/api/session/question-status", headers=headers
+        )
+        assert generating.json() == {"ready": False}
+        ready = await delayed_client.get(
+            "/api/session/question-status", headers=headers
+        )
+        assert ready.json() == {"ready": True}

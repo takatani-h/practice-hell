@@ -32,4 +32,5 @@ export type Feedback = {
   correct_answer: string;
   correct_answer_label: string;
   progress: Progress;
+  next_question_ready: boolean;
 };
