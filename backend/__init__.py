@@ -1,1 +1,0 @@
-"""PracticeHell backend package."""

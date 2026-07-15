@@ -1,0 +1,29 @@
+# PracticeHell 問題定義テンプレート
+schema_version: 1
+
+# URLの ?code= に指定する値。問題YAML間で重複させない。
+join_code: math-example
+title: 数値計算の練習
+
+generation:
+  # 1問を生成するためにLLMへ渡す指示。
+  # 学習範囲、難易度、使用してよい式、単位、丸め方を明記する。
+  prompt: |
+    中学校1年生向けの正負の数の計算問題を1問作成する。
+    問題文だけで答えが一意に決まるようにする。
+    問題は文章と式だけで構成し、画像や選択肢を使わない。
+    解答は整数または有限小数の数値にする。
+
+question:
+  answer_type: number
+
+  # abs(提出値 - 正答) <= max(absolute_tolerance,
+  #                             relative_tolerance * abs(正答)) なら正解。
+  absolute_tolerance: "0"
+  relative_tolerance: "0"
+
+mastery:
+  minimum_answers: 20
+  metric: ema
+  threshold: "0.8"
+  ema_alpha: "0.2"
