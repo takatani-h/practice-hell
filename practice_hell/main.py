@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import os
 import sqlite3
 from decimal import Decimal, InvalidOperation
@@ -19,6 +20,7 @@ from .storage import Progress, Store
 
 load_dotenv()
 ROOT = Path(__file__).resolve().parent.parent
+logger = logging.getLogger("uvicorn.error")
 
 
 class SessionCreate(BaseModel):
@@ -52,12 +54,11 @@ def progress_dict(progress: Progress) -> dict:
     }
 
 
-def exercise_dict(problem: ProblemConfig, model_name: str) -> dict:
+def exercise_dict(problem: ProblemConfig) -> dict:
     result = {
         "join_code": problem.join_code,
         "title": problem.title,
         "answer_type": problem.question.answer_type,
-        "model": model_name,
         "mastery": problem.mastery.model_dump(),
     }
     if isinstance(problem.question, SingleChoiceQuestion):
@@ -77,6 +78,7 @@ def create_app(
     model_name = str(
         getattr(question_generator, "model_name", question_generator.__class__.__name__)
     )
+    logger.info("使用中のモデル: %s", model_name)
     generation_locks: dict[int, asyncio.Lock] = {}
 
     app = FastAPI(title="PracticeHell", version="0.1.0")
@@ -136,7 +138,7 @@ def create_app(
         problem = problems.get(join_code)
         if problem is None:
             raise HTTPException(404, "参加コードに対応する演習がありません")
-        return exercise_dict(problem, model_name)
+        return exercise_dict(problem)
 
     @app.post("/api/sessions")
     async def create_session(
@@ -155,7 +157,7 @@ def create_app(
         except Exception as exc:
             raise HTTPException(503, f"最初の問題を生成できませんでした: {exc}") from exc
         background_tasks.add_task(ensure_buffer, session_id, problem, 2)
-        return {"token": token, "exercise": exercise_dict(problem, model_name)}
+        return {"token": token, "exercise": exercise_dict(problem)}
 
     @app.get("/api/session/question")
     async def get_question(

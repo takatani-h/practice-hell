@@ -193,7 +193,6 @@ export default function App() {
     <main>
       <div className="app-title">PracticeHell</div>
       <Message text={error} />
-      {exercise && <Message text={`使用中のモデル: ${exercise.model}`} kind="info" />}
       {exercise && (joined ? <Practice exercise={exercise} /> : <AttendanceForm exercise={exercise} onJoined={() => setJoined(true)} />)}
     </main>
   );

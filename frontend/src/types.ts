@@ -3,7 +3,6 @@ export type Choice = { id: string; label: string };
 export type Exercise = {
   join_code: string;
   title: string;
-  model: string;
   answer_type: "number" | "single_choice";
   choices?: Choice[];
   mastery: {
