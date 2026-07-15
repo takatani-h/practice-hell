@@ -23,7 +23,7 @@ question:
   relative_tolerance: "0"
 
 mastery:
-  minimum_answers: 20
-  metric: ema
-  threshold: "0.8"
-  ema_alpha: "0.2"
+  # 直近10問のうち80%以上（8問以上）の正解で達成。
+  # window_size 問が揃うまでは達成と判定しない。
+  window_size: 10
+  required_accuracy_percent: 80
