@@ -1,0 +1,73 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;700;900&display=swap");
+
+:root { font-family: "Noto Sans JP", sans-serif; color: #201e18; background: #f2efe5; font-synthesis: none; --ink: #201e18; --paper: #f8f5eb; --acid: #d7ff3f; --orange: #ff5a36; --line: #cdc7b7; }
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; min-height: 100vh; background-image: linear-gradient(rgba(32,30,24,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(32,30,24,.045) 1px, transparent 1px); background-size: 32px 32px; }
+button, input, textarea { font: inherit; }
+button { cursor: pointer; }
+.shell { min-height: 100vh; max-width: 1180px; margin: auto; padding: 48px; }
+.landing { display: grid; grid-template-columns: 1.3fr .7fr; align-items: center; gap: 72px; }
+.hero h1 { font-size: clamp(4rem, 10vw, 8rem); line-height: .85; letter-spacing: -.08em; margin: 18px 0 28px; font-weight: 900; }
+h1 span, .topbar span { color: var(--orange); }
+.eyebrow { font-family: "DM Mono", monospace; letter-spacing: .15em; font-size: .78rem; font-weight: 500; text-transform: uppercase; }
+.tagline { font-size: 1.4rem; font-weight: 700; border-left: 8px solid var(--acid); padding-left: 18px; }
+.card { background: var(--paper); border: 2px solid var(--ink); box-shadow: 10px 10px 0 var(--ink); padding: 34px; position: relative; }
+.card-number { position: absolute; right: 18px; top: 12px; font: 500 2.5rem "DM Mono"; color: #c9c4b6; }
+h2 { font-size: 1.6rem; margin: 8px 0 12px; }
+.muted { color: #6e695d; }
+form { display: grid; gap: 18px; }
+label { display: grid; gap: 7px; font-size: .8rem; font-weight: 700; }
+input, textarea { width: 100%; border: 1.5px solid var(--ink); background: #fffef9; padding: 12px 14px; border-radius: 0; color: var(--ink); }
+input:focus, textarea:focus { outline: 3px solid var(--acid); outline-offset: 0; }
+.primary, .secondary, .approve, .danger { border: 1.5px solid var(--ink); padding: 12px 16px; font-weight: 800; box-shadow: 3px 3px 0 var(--ink); }
+.primary { background: var(--acid); }
+.secondary { background: #fffef9; }
+.approve { background: #b8ef9b; }
+.danger { background: #ff9e87; }
+button:disabled { opacity: .5; cursor: wait; }
+.text-button { border: 0; background: transparent; text-decoration: underline; padding: 10px 0; }
+.join-card .text-button { margin-top: 18px; }
+.error { background: #ffe0d9; border-left: 4px solid var(--orange); padding: 10px; font-size: .85rem; }
+.center { display: grid; place-items: center; }
+.login-card { width: min(420px, 100%); }
+.topbar { height: 72px; border-bottom: 2px solid var(--ink); padding: 0 32px; display: flex; align-items: center; justify-content: space-between; background: var(--paper); }
+.topbar strong { font-size: 1.3rem; }
+.practice-shell { max-width: none; padding: 0; }
+.practice-panel { width: min(760px, calc(100% - 40px)); margin: 10vh auto; background: var(--paper); border: 2px solid var(--ink); padding: clamp(28px, 6vw, 64px); }
+.practice-panel h2 { font-size: clamp(1.5rem, 4vw, 2.6rem); line-height: 1.5; margin: 28px 0 42px; }
+.answer-form input { font: 500 2rem "DM Mono"; }
+.feedback .result { font-size: 2.8rem; font-weight: 900; margin: 12px 0; }
+.feedback.correct .result { text-decoration: underline 10px var(--acid); }
+.feedback.wrong .result { text-decoration: underline 10px #ff9e87; }
+.stats { display: flex; gap: 12px; margin: 24px 0; }
+.stats span { border: 1.5px solid var(--ink); padding: 12px 20px; font: 500 1.5rem "DM Mono"; }
+.stats small { display: block; font: 400 .7rem "Noto Sans JP"; }
+.achieved { background: var(--acid); border: 1.5px solid var(--ink); padding: 16px; font-weight: 900; }
+.admin-shell { min-height: 100vh; }
+.admin-grid { display: grid; grid-template-columns: 260px 1fr; min-height: calc(100vh - 72px); }
+aside { border-right: 2px solid var(--ink); background: #e7e3d7; padding: 24px; }
+aside .primary { width: 100%; }
+aside h3 { margin-top: 36px; font-size: .8rem; text-transform: uppercase; letter-spacing: .1em; }
+.exercise-link { width: 100%; display: grid; text-align: left; gap: 3px; border: 0; border-top: 1px solid var(--line); background: transparent; padding: 13px 3px; }
+.exercise-link small { color: #6e695d; }
+.admin-main { padding: 48px; max-width: 1000px; }
+.admin-main h1 { font-size: 2.7rem; margin: 8px 0 26px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; max-width: 720px; }
+.wide { grid-column: 1 / -1; }
+.detail-head { display: flex; justify-content: space-between; gap: 20px; }
+.join-code { border: 2px solid var(--ink); background: var(--acid); padding: 10px 22px; align-self: start; text-align: center; }
+.join-code small { display: block; }
+.join-code strong { font: 500 2rem "DM Mono"; letter-spacing: .12em; }
+.prompt-box { border-left: 6px solid var(--ink); padding: 12px 18px; background: #e7e3d7; white-space: pre-wrap; }
+.actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 20px 0; }
+.count { font: 400 .9rem "DM Mono"; background: var(--ink); color: white; padding: 3px 8px; border-radius: 20px; }
+.questions { display: grid; gap: 18px; }
+.question { border: 1.5px solid var(--ink); background: var(--paper); padding: 18px; }
+.question.approved { border-left: 8px solid #70b84b; }
+.question.rejected { opacity: .55; }
+.question textarea { min-height: 80px; }
+.question-values { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; margin-top: 10px; }
+table { width: 100%; border-collapse: collapse; background: var(--paper); }
+th, td { border-bottom: 1px solid var(--line); text-align: left; padding: 12px; }
+th { font-size: .75rem; text-transform: uppercase; }
+@media (max-width: 760px) { .shell { padding: 24px; } .landing { grid-template-columns: 1fr; gap: 30px; } .hero h1 { font-size: 4rem; } .admin-grid { display: block; } aside { border-right: 0; border-bottom: 2px solid var(--ink); } .admin-main { padding: 24px; } .form-grid, .question-values { grid-template-columns: 1fr; } .wide { grid-column: auto; } .detail-head { display: block; } .join-code { display: inline-block; margin-bottom: 20px; } }

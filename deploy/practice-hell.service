@@ -1,0 +1,19 @@
+[Unit]
+Description=PracticeHell
+After=network.target
+
+[Service]
+Type=simple
+User=practice-hell
+Group=practice-hell
+WorkingDirectory=/opt/practice-hell
+EnvironmentFile=/etc/practice-hell.env
+ExecStart=/opt/practice-hell/.venv/bin/uvicorn backend.main:app --host 127.0.0.1 --port 8000
+Restart=on-failure
+RestartSec=5
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/practice-hell
+
+[Install]
+WantedBy=multi-user.target
