@@ -1,0 +1,39 @@
+# PracticeHell 選択式問題定義テンプレート
+schema_version: 1
+
+# URLの ?code= に指定する値。問題YAML間で重複させない。
+join_code: "20260716000206"
+title: 1自由度振動系の減衰の種類
+
+generation:
+  # 1問を生成するためにLLMへ渡す指示。
+  prompt: |
+    1自由度振動系 $m \ddot{x} + c \dot{x} + k x = 0$ の $m, c, k$ を示し、
+    減衰の種類を問う問題を1問作成する。
+
+    減衰の種類は、臨界減衰係数 $c_c = 2\sqrt{mk}$ を基準として、
+    次のいずれかになるようにする。
+
+    - $c < c_c$: 不足減衰
+    - $c = c_c$: 臨界減衰
+    - $c > c_c$: 過減衰
+
+    $m, c, k$ は正の値とし、判定が数値の丸めに左右されない組合せにする。
+    臨界減衰の場合は、表示した値から $c = c_c$ と厳密に判断できる値にする。
+    問題は文章と式だけで構成し、正解の選択肢IDも生成する。
+
+question:
+  answer_type: single_choice
+  choices:
+    - id: underdamped
+      label: 不足減衰
+    - id: critically_damped
+      label: 臨界減衰
+    - id: overdamped
+      label: 過減衰
+
+mastery:
+  # 直近10問のうち80%以上（8問以上）の正解で達成。
+  # window_size 問が揃うまでは達成と判定しない。
+  window_size: 10
+  required_accuracy_percent: 80
