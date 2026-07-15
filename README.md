@@ -14,7 +14,7 @@ PracticeHell は、LLMが生成する問題を1問ずつ解き、設定された
 
 ## 基本方針
 
-- 参加コードは [問題YAML](problems/example.yaml) の `join_code` と照合する。
+- 参加コードは [問題YAML](problems/example_number_answer.yaml) の `join_code` と照合する。
 - 問題はLLM APIで都度生成し、待ち時間を抑えるため次の1問を先行生成する。
 - 問題は文章と式だけで構成し、画像やリッチコンテンツは扱わない。
 - 問題定義はYAML、出席情報・生成問題・答案・進捗はSQLiteへ保存する。

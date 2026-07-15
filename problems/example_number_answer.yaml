@@ -2,17 +2,22 @@
 schema_version: 1
 
 # URLの ?code= に指定する値。問題YAML間で重複させない。
-join_code: math-example
-title: 数値計算の練習
+join_code: "20260715235000"
+title: 1自由度振動系の固有角振動数・角振動数・周期
 
 generation:
   # 1問を生成するためにLLMへ渡す指示。
   # 学習範囲、難易度、使用してよい式、単位、丸め方を明記する。
   prompt: |
-    中学校1年生向けの正負の数の計算問題を1問作成する。
-    問題文だけで答えが一意に決まるようにする。
-    問題は文章と式だけで構成し、画像や選択肢を使わない。
-    解答は整数または有限小数の数値にする。
+    1自由度振動系 $m \ddot{x} + c \dot{x} + k x = 0$ の
+
+    - 固有角振動数 (rad/s)
+    - 固有振動数 (Hz)
+    - 固有周期 (s)
+
+    のいずれかを求める問題を1問作成する。
+    3つのうちどれを問うかはランダムに決める。
+    $m, c, k$ は物理的におかしくない範囲でランダムに変える。$c = 0$ の問題も含める。
 
 question:
   answer_type: number
@@ -20,7 +25,7 @@ question:
   # abs(提出値 - 正答) <= max(absolute_tolerance,
   #                             relative_tolerance * abs(正答)) なら正解。
   absolute_tolerance: "0"
-  relative_tolerance: "0"
+  relative_tolerance: "0.05"
 
 mastery:
   # 直近10問のうち80%以上（8問以上）の正解で達成。

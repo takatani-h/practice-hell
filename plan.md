@@ -40,7 +40,7 @@
 
 ## 問題YAML
 
-[problems/example.yaml](problems/example.yaml) を初期テンプレートとする。
+[problems/example_number_answer.yaml](problems/example_number_answer.yaml) を数値解答形式の初期テンプレートとする。
 
 - アプリへの参加情報: `join_code`、`title`
 - LLMへの生成指示: `generation.prompt`
