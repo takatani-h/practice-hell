@@ -23,6 +23,7 @@ it("次問の生成中は次へ進むボタンを無効にする", async () => {
       return Response.json({
         join_code: "test-simple-addition",
         title: "単純な足し算",
+        model: "gpt-5.6-luna",
         answer_type: "number",
         mastery: { window_size: 5, required_accuracy_percent: 100 },
       });
@@ -58,6 +59,7 @@ it("次問の生成中は次へ進むボタンを無効にする", async () => {
   }));
 
   render(<App />);
+  expect(await screen.findByText("使用中のモデル: gpt-5.6-luna")).toBeInTheDocument();
   fireEvent.change(await screen.findByLabelText("解答"), { target: { value: "4" } });
   fireEvent.click(screen.getByRole("button", { name: "解答する" }));
 

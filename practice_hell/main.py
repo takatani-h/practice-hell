@@ -52,11 +52,12 @@ def progress_dict(progress: Progress) -> dict:
     }
 
 
-def exercise_dict(problem: ProblemConfig) -> dict:
+def exercise_dict(problem: ProblemConfig, model_name: str) -> dict:
     result = {
         "join_code": problem.join_code,
         "title": problem.title,
         "answer_type": problem.question.answer_type,
+        "model": model_name,
         "mastery": problem.mastery.model_dump(),
     }
     if isinstance(problem.question, SingleChoiceQuestion):
@@ -73,6 +74,9 @@ def create_app(
     problems = load_problems(problems_directory or ROOT / "problems")
     store = Store(database_path or Path(os.getenv("DATABASE_PATH", "practice-hell.db")))
     question_generator = generator or build_generator()
+    model_name = str(
+        getattr(question_generator, "model_name", question_generator.__class__.__name__)
+    )
     generation_locks: dict[int, asyncio.Lock] = {}
 
     app = FastAPI(title="PracticeHell", version="0.1.0")
@@ -132,7 +136,7 @@ def create_app(
         problem = problems.get(join_code)
         if problem is None:
             raise HTTPException(404, "参加コードに対応する演習がありません")
-        return exercise_dict(problem)
+        return exercise_dict(problem, model_name)
 
     @app.post("/api/sessions")
     async def create_session(
@@ -151,7 +155,7 @@ def create_app(
         except Exception as exc:
             raise HTTPException(503, f"最初の問題を生成できませんでした: {exc}") from exc
         background_tasks.add_task(ensure_buffer, session_id, problem, 2)
-        return {"token": token, "exercise": exercise_dict(problem)}
+        return {"token": token, "exercise": exercise_dict(problem, model_name)}
 
     @app.get("/api/session/question")
     async def get_question(

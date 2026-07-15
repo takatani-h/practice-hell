@@ -42,6 +42,7 @@ async def test_number_answer_flow(client: httpx.AsyncClient) -> None:
     exercise = await client.get(f"/api/exercises/{code}")
     assert exercise.status_code == 200
     assert exercise.json()["answer_type"] == "number"
+    assert exercise.json()["model"] == "fixed"
 
     headers = await join(client, code)
     question = await client.get("/api/session/question", headers=headers)

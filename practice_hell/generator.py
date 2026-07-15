@@ -28,6 +28,10 @@ class OpenAIQuestionGenerator:
         self.model = os.getenv("OPENAI_MODEL", "gpt-5.6")
         self.client: AsyncOpenAI | None = None
 
+    @property
+    def model_name(self) -> str:
+        return self.model
+
     async def generate(
         self, problem: ProblemConfig, recent_question_texts: list[str], position: int
     ) -> GeneratedQuestion:
@@ -77,6 +81,8 @@ class OpenAIQuestionGenerator:
 
 class FixedQuestionGenerator:
     """APIを使わないテスト・画面確認用ジェネレーター。"""
+
+    model_name = "fixed"
 
     async def generate(
         self, problem: ProblemConfig, recent_question_texts: list[str], position: int
