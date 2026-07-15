@@ -3,22 +3,15 @@ schema_version: 1
 
 # URLの ?code= に指定する値。問題YAML間で重複させない。
 # 英数字で始まる64文字以内の英数字・ハイフン・アンダースコアにする。
-join_code: "20260715235000"
-title: 1自由度振動系の固有角振動数・角振動数・周期
+join_code: "test-simple-addition"
+title: 単純な足し算
 
 generation:
   # 1問を生成するためにLLMへ渡す指示。
   # 学習範囲、難易度、使用してよい式、単位、丸め方を明記する。
   prompt: |
-    1自由度振動系 $m \ddot{x} + c \dot{x} + k x = 0$ の
-
-    - 固有角振動数 (rad/s)
-    - 固有振動数 (Hz)
-    - 固有周期 (s)
-
-    のいずれかを求める問題を1問作成する。
-    3つのうちどれを問うかはランダムに決める。
-    $m, c, k$ は物理的におかしくない範囲でランダムに変える。$c = 0$ の問題も含める。
+    2つの数字X, Yについて、X + Yを計算する問題を1問作成する。
+    X, Yは-100〜+100の範囲の整数からランダムに決める。
 
 question:
   answer_type: number
@@ -26,10 +19,10 @@ question:
   # abs(提出値 - 正答) <= max(absolute_tolerance,
   #                             relative_tolerance * abs(正答)) なら正解。
   absolute_tolerance: "0"
-  relative_tolerance: "0.05"
+  relative_tolerance: "0"
 
 mastery:
   # 直近10問のうち80%以上（8問以上）の正解で達成。
   # window_size 問が揃うまでは達成と判定しない。
-  window_size: 10
-  required_accuracy_percent: 80
+  window_size: 5
+  required_accuracy_percent: 100

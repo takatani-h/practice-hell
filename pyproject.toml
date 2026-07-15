@@ -1,0 +1,24 @@
+[project]
+name = "practice-hell"
+version = "0.1.0"
+description = "LLM生成問題を繰り返し解く演習アプリ"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi>=0.116,<0.117",
+  "openai>=1.97,<2",
+  "pydantic>=2.11,<3",
+  "python-dotenv>=1.1,<2",
+  "pyyaml>=6,<7",
+  "uvicorn[standard]>=0.35,<1",
+]
+
+[dependency-groups]
+dev = [
+  "httpx>=0.28,<1",
+  "pytest>=8.4,<9",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q"

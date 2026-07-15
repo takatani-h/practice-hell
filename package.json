@@ -1,0 +1,29 @@
+{
+  "name": "practice-hell-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "latest",
+    "katex": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "react-katex": "latest",
+    "typescript": "latest",
+    "vite": "latest"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "latest",
+    "@testing-library/react": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "@types/react-katex": "latest",
+    "jsdom": "latest",
+    "vitest": "latest"
+  }
+}

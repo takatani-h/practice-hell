@@ -26,7 +26,36 @@ PracticeHell は、LLMが生成する問題を1問ずつ解き、設定された
 
 - [数値解答式](problems/example_number_answer.yaml)
 - [単一選択式](problems/example_single_choice_answer.yaml)
+- [単純な足し算](problems/example_simple_addition.yaml)
+
+## 起動方法
+
+Python 3.12以降、Node.js 20以降を想定しています。
+
+```bash
+uv sync
+npm install
+npm run build
+cp -n .env.example .env
+uv run --isolated uvicorn practice_hell.asgi:app --reload
+```
+
+`.env` の `OPENAI_API_KEY` にAPIキーを設定し、ブラウザで次の形式のURLを開きます。
+
+```text
+http://127.0.0.1:8000/?code=test-simple-addition
+```
+
+APIを使わずに画面を確認する場合は、`.env` で `QUESTION_PROVIDER=fixed` を指定します。生成問題・答案・進捗は、標準ではルートの `practice-hell.db` に保存されます。
+
+## 確認方法
+
+```bash
+uv run --isolated pytest
+npm test -- --run
+npm run build
+```
 
 ## 現在の状態
 
-以前のMVP実装は削除し、要件とデータ形式を整理し直している段階です。実装順は [plan.md](plan.md) を参照してください。
+解答者向けの最小実装は完了しています。対象範囲と後続項目は [plan.md](plan.md) を参照してください。
