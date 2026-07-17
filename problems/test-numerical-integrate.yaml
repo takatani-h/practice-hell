@@ -1,0 +1,38 @@
+# PracticeHell 問題定義テンプレート
+schema_version: 1
+
+# URLの ?code= に指定する値。問題YAML間で重複させない。
+# 英数字で始まる64文字以内の英数字・ハイフン・アンダースコアにする。
+join_code: "test-numerical-integrate"
+title: 定積分
+
+generation:
+  # 1問を生成するためにLLMへ渡す指示。
+  # 学習範囲、難易度、使用してよい式、単位、丸め方を明記する。
+  prompt: |
+    高校数学範囲の定積分の問題を問う。
+
+    - 基本的な三角関数
+    - 多項式
+    - 指数関数
+
+    変数を角度に置き換えなければいけないような、特殊なものは問わない。
+    答えが小数点以下の値を含む場合は、小数点以下2ケタで丸める。
+
+    - 複数種類の関数は混ぜない
+    - 多項式の項数は最大3項とする
+    - 積分範囲は整数または小数とする
+
+question:
+  answer_type: number
+
+  # abs(提出値 - 正答) <= max(absolute_tolerance,
+  #                             relative_tolerance * abs(正答)) なら正解。
+  absolute_tolerance: "0"
+  relative_tolerance: "0.05"
+
+mastery:
+  # 直近 `window_size` 問のうち `required_accuracy_percent` %以上の正解で達成。
+  # window_size 問が揃うまでは達成と判定しない。
+  window_size: 5
+  required_accuracy_percent: 60
