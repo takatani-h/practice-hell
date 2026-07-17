@@ -55,6 +55,7 @@ function Practice({ exercise }: { exercise: Exercise }) {
   const [answer, setAnswer] = useState("");
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [loading, setLoading] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
   const [error, setError] = useState("");
 
   async function loadQuestion() {
@@ -76,7 +77,7 @@ function Practice({ exercise }: { exercise: Exercise }) {
   useEffect(() => { void loadQuestion(); }, []);
 
   useEffect(() => {
-    if (!feedback || feedback.next_question_ready) return;
+    if (!feedback || feedback.next_question_ready || regenerating) return;
 
     let cancelled = false;
     let timer: number | undefined;
@@ -102,7 +103,28 @@ function Practice({ exercise }: { exercise: Exercise }) {
       cancelled = true;
       if (timer !== undefined) window.clearTimeout(timer);
     };
-  }, [feedback?.next_question_ready]);
+  }, [feedback?.next_question_ready, regenerating]);
+
+  async function regenerateNextQuestion() {
+    setRegenerating(true);
+    setError("");
+    setFeedback((current) => current
+      ? { ...current, next_question_ready: false }
+      : current);
+    try {
+      const result = await api<{ ready: boolean }>(
+        "/api/session/question/regenerate",
+        { method: "POST", headers: sessionHeaders() },
+      );
+      setFeedback((current) => current
+        ? { ...current, next_question_ready: result.ready }
+        : current);
+    } catch (cause) {
+      setError((cause as Error).message);
+    } finally {
+      setRegenerating(false);
+    }
+  }
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -158,12 +180,22 @@ function Practice({ exercise }: { exercise: Exercise }) {
             <div><dt>目標</dt><dd>直近{feedback.progress.window_size}問で{feedback.progress.required_accuracy_percent}%以上</dd></div>
           </dl>
           {feedback.progress.achieved && <p className="achieved">目標を達成しました。続けて演習できます。</p>}
-          <button
-            onClick={() => void loadQuestion()}
-            disabled={!feedback.next_question_ready}
-          >
-            {feedback.next_question_ready ? "次の問題" : "次の問題を生成中"}
-          </button>
+          <div className="feedback-actions">
+            <button
+              onClick={() => void loadQuestion()}
+              disabled={!feedback.next_question_ready || regenerating}
+            >
+              {feedback.next_question_ready ? "次の問題" : "次の問題を生成中"}
+            </button>
+            <button
+              type="button"
+              className="secondary"
+              onClick={() => void regenerateNextQuestion()}
+              disabled={regenerating}
+            >
+              {regenerating ? "再生成中" : "次の問題を再生成"}
+            </button>
+          </div>
         </div>
       )}
     </section>

@@ -124,6 +124,27 @@ class DelayedQuestionGenerator:
         )
 
 
+class RecordingQuestionGenerator:
+    def __init__(self) -> None:
+        self.prompts: list[str] = []
+
+    async def generate(self, problem, recent_question_texts, position):
+        prompt = problem.generation.prompt.strip()
+        self.prompts.append(prompt)
+        return GeneratedQuestion(question_text=prompt, correct_answer="4")
+
+
+class SequentialQuestionGenerator:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    async def generate(self, problem, recent_question_texts, position):
+        self.calls += 1
+        return GeneratedQuestion(
+            question_text=f"生成問題 {self.calls}", correct_answer="4"
+        )
+
+
 async def test_next_question_status_waits_until_generation_finishes(
     tmp_path: Path,
 ) -> None:
@@ -157,3 +178,93 @@ async def test_next_question_status_waits_until_generation_finishes(
             "/api/session/question-status", headers=headers
         )
         assert ready.json() == {"ready": True}
+
+
+async def test_updated_yaml_is_used_for_next_generation(tmp_path: Path) -> None:
+    problem_directory = tmp_path / "problems"
+    problem_directory.mkdir()
+    source = Path("problems/example_simple_addition.yaml").read_text(encoding="utf-8")
+    problem_path = problem_directory / "addition.yaml"
+    problem_path.write_text(
+        source.replace(
+            "2つの数字X, Yについて、X + Yを計算する問題を1問作成する。",
+            "変更前の条件で問題を作成する。",
+        ),
+        encoding="utf-8",
+    )
+    generator = RecordingQuestionGenerator()
+    app = create_app(
+        database_path=tmp_path / "reload.db",
+        problems_directory=problem_directory,
+        generator=generator,
+    )
+
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app), base_url="http://test"
+    ) as reload_client:
+        headers = await join(reload_client, "test-simple-addition")
+        assert len(generator.prompts) == 2
+        assert all("変更前" in prompt for prompt in generator.prompts)
+
+        problem_path.write_text(
+            problem_path.read_text(encoding="utf-8").replace("変更前", "変更後"),
+            encoding="utf-8",
+        )
+
+        first = (await reload_client.get(
+            "/api/session/question", headers=headers
+        )).json()
+        await reload_client.post(
+            "/api/session/answer",
+            headers=headers,
+            json={"question_id": first["id"], "answer": "4"},
+        )
+        second = (await reload_client.get(
+            "/api/session/question", headers=headers
+        )).json()
+        await reload_client.post(
+            "/api/session/answer",
+            headers=headers,
+            json={"question_id": second["id"], "answer": "4"},
+        )
+        third = (await reload_client.get(
+            "/api/session/question", headers=headers
+        )).json()
+
+        assert "変更後" in generator.prompts[-1]
+        assert "変更後" in third["question_text"]
+
+
+async def test_regenerate_discards_buffered_question(tmp_path: Path) -> None:
+    generator = SequentialQuestionGenerator()
+    app = create_app(
+        database_path=tmp_path / "regenerate.db",
+        problems_directory=Path("problems"),
+        generator=generator,
+    )
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app), base_url="http://test"
+    ) as regenerate_client:
+        headers = await join(regenerate_client, "test-simple-addition")
+        assert generator.calls == 2
+
+        first = (await regenerate_client.get(
+            "/api/session/question", headers=headers
+        )).json()
+        await regenerate_client.post(
+            "/api/session/answer",
+            headers=headers,
+            json={"question_id": first["id"], "answer": "4"},
+        )
+
+        regenerated = await regenerate_client.post(
+            "/api/session/question/regenerate", headers=headers
+        )
+        assert regenerated.status_code == 200
+        assert regenerated.json() == {"ready": True}
+        assert generator.calls == 3
+
+        next_question = (await regenerate_client.get(
+            "/api/session/question", headers=headers
+        )).json()
+        assert next_question["question_text"] == "生成問題 3"

@@ -72,7 +72,8 @@ def create_app(
     problems_directory: Path | None = None,
     generator: QuestionGenerator | None = None,
 ) -> FastAPI:
-    problems = load_problems(problems_directory or ROOT / "problems")
+    problem_directory = problems_directory or ROOT / "problems"
+    problems = load_problems(problem_directory)
     store = Store(database_path or Path(os.getenv("DATABASE_PATH", "practice-hell.db")))
     question_generator = generator or build_generator()
     model_name = str(
@@ -85,11 +86,19 @@ def create_app(
     app.state.problems = problems
     app.state.store = store
 
-    def problem_for_session(session: sqlite3.Row) -> ProblemConfig:
-        problem = problems.get(str(session["join_code"]))
+    def reload_problem(join_code: str) -> ProblemConfig:
+        current_problems = load_problems(problem_directory)
+        app.state.problems = current_problems
+        problem = current_problems.get(join_code)
         if problem is None:
-            raise HTTPException(404, "演習が見つかりません")
+            raise KeyError(join_code)
         return problem
+
+    def problem_for_session(session: sqlite3.Row) -> ProblemConfig:
+        try:
+            return reload_problem(str(session["join_code"]))
+        except KeyError as exc:
+            raise HTTPException(404, "演習が見つかりません") from exc
 
     async def require_session(
         authorization: str | None = Header(default=None),
@@ -101,7 +110,8 @@ def create_app(
             raise HTTPException(401, "出席情報が無効です")
         return session
 
-    async def generate_one(session_id: int, problem: ProblemConfig) -> None:
+    async def generate_one(session_id: int, join_code: str) -> None:
+        problem = reload_problem(join_code)
         reserved = store.reserve_question(session_id, problem.question.answer_type)
         try:
             generated = await question_generator.generate(
@@ -117,13 +127,13 @@ def create_app(
             raise
 
     async def ensure_buffer(
-        session_id: int, problem: ProblemConfig, target: int, raise_errors: bool = False
+        session_id: int, join_code: str, target: int, raise_errors: bool = False
     ) -> None:
         lock = generation_locks.setdefault(session_id, asyncio.Lock())
         async with lock:
             while store.count_buffered_questions(session_id) < target:
                 try:
-                    await generate_one(session_id, problem)
+                    await generate_one(session_id, join_code)
                 except Exception:
                     if raise_errors:
                         raise
@@ -135,8 +145,9 @@ def create_app(
 
     @app.get("/api/exercises/{join_code}")
     async def get_exercise(join_code: str) -> dict:
-        problem = problems.get(join_code)
-        if problem is None:
+        try:
+            problem = reload_problem(join_code)
+        except KeyError:
             raise HTTPException(404, "参加コードに対応する演習がありません")
         return exercise_dict(problem)
 
@@ -144,8 +155,9 @@ def create_app(
     async def create_session(
         payload: SessionCreate, background_tasks: BackgroundTasks
     ) -> dict:
-        problem = problems.get(payload.join_code)
-        if problem is None:
+        try:
+            problem = reload_problem(payload.join_code)
+        except KeyError:
             raise HTTPException(404, "参加コードに対応する演習がありません")
         session_id, token = store.create_session(
             payload.join_code,
@@ -153,10 +165,12 @@ def create_app(
             payload.student_name,
         )
         try:
-            await ensure_buffer(session_id, problem, target=1, raise_errors=True)
+            await ensure_buffer(
+                session_id, payload.join_code, target=1, raise_errors=True
+            )
         except Exception as exc:
             raise HTTPException(503, f"最初の問題を生成できませんでした: {exc}") from exc
-        background_tasks.add_task(ensure_buffer, session_id, problem, 2)
+        background_tasks.add_task(ensure_buffer, session_id, payload.join_code, 2)
         return {"token": token, "exercise": exercise_dict(problem)}
 
     @app.get("/api/session/question")
@@ -167,11 +181,15 @@ def create_app(
         problem = problem_for_session(session)
         question = store.claim_question(int(session["id"]))
         if question is None:
-            await ensure_buffer(int(session["id"]), problem, target=1)
+            await ensure_buffer(
+                int(session["id"]), str(session["join_code"]), target=1
+            )
             question = store.claim_question(int(session["id"]))
         if question is None:
             raise HTTPException(503, "問題を生成できませんでした。再試行してください")
-        background_tasks.add_task(ensure_buffer, int(session["id"]), problem, 1)
+        background_tasks.add_task(
+            ensure_buffer, int(session["id"]), str(session["join_code"]), 1
+        )
         result = {
             "id": question["id"],
             "question_text": question["question_text"],
@@ -189,8 +207,27 @@ def create_app(
         problem = problem_for_session(session)
         ready = store.has_ready_question(int(session["id"]))
         if not ready:
-            background_tasks.add_task(ensure_buffer, int(session["id"]), problem, 1)
+            background_tasks.add_task(
+                ensure_buffer, int(session["id"]), str(session["join_code"]), 1
+            )
         return {"ready": ready}
+
+    @app.post("/api/session/question/regenerate")
+    async def regenerate_question(
+        session: sqlite3.Row = Depends(require_session),
+    ) -> dict:
+        session_id = int(session["id"])
+        join_code = str(session["join_code"])
+        lock = generation_locks.setdefault(session_id, asyncio.Lock())
+        async with lock:
+            store.discard_buffered_questions(session_id)
+            try:
+                await generate_one(session_id, join_code)
+            except Exception as exc:
+                raise HTTPException(
+                    503, f"次の問題を再生成できませんでした: {exc}"
+                ) from exc
+        return {"ready": True}
 
     @app.post("/api/session/answer")
     async def submit_answer(
@@ -240,7 +277,9 @@ def create_app(
             problem.mastery.required_accuracy_percent,
         )
         store.save_progress_snapshot(int(question["id"]), progress)
-        background_tasks.add_task(ensure_buffer, int(session["id"]), problem, 1)
+        background_tasks.add_task(
+            ensure_buffer, int(session["id"]), str(session["join_code"]), 1
+        )
         return {
             "correct": correct,
             "correct_answer": str(question["correct_answer"]),

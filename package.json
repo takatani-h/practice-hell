@@ -13,7 +13,6 @@
     "katex": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "react-katex": "latest",
     "typescript": "latest",
     "vite": "latest"
   },
@@ -22,7 +21,6 @@
     "@testing-library/react": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",
-    "@types/react-katex": "latest",
     "jsdom": "latest",
     "vitest": "latest"
   }

@@ -17,6 +17,8 @@ label { display: grid; gap: 6px; }
 input { font: inherit; padding: 10px; border: 1px solid #aaa; border-radius: 4px; }
 button { width: fit-content; font: inherit; padding: 10px 20px; color: #fff; background: #222; border: 0; border-radius: 4px; cursor: pointer; }
 button:disabled { color: #fff; background: #999; cursor: wait; }
+button.secondary { color: #222; background: #e5e5e5; }
+button.secondary:disabled { color: #666; background: #eee; }
 .question-text { padding: 20px; background: #f7f7f7; white-space: pre-wrap; font-size: 1.1rem; }
 fieldset { display: grid; gap: 10px; border: 1px solid #ccc; }
 .choice { display: flex; align-items: center; gap: 8px; }
@@ -24,6 +26,7 @@ fieldset { display: grid; gap: 10px; border: 1px solid #ccc; }
 .message { padding: 12px; border-left: 4px solid #b00020; background: #fff4f4; }
 .message.info { border-color: #777; background: #f7f7f7; }
 .feedback { display: grid; gap: 12px; }
+.feedback-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 dl { display: grid; gap: 8px; }
 dl div { display: grid; grid-template-columns: 120px 1fr; }
 dt { color: #555; }

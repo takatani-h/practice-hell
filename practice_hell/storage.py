@@ -180,6 +180,17 @@ class Store:
                 is not None
             )
 
+    def discard_buffered_questions(self, session_id: int) -> int:
+        with self.connect() as db:
+            cursor = db.execute(
+                """
+                DELETE FROM questions
+                WHERE session_id=? AND status IN ('ready', 'generating')
+                """,
+                (session_id,),
+            )
+            return cursor.rowcount
+
     def recent_question_texts(self, session_id: int, limit: int = 5) -> list[str]:
         with self.connect() as db:
             rows = db.execute(
